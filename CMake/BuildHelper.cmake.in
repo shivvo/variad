@@ -1,0 +1,139 @@
+# Build rule helpers
+
+include(CMakeParseArguments)
+
+# Gets current directory's path relative to source directory. Populates in
+# variable `ret`
+function(build_helper_curdir_rpath ret) 
+  # Removes @BUILD_HELPER_USE_SRC_DIR@ (prefix) 
+  # from CMAKE_CURRENT_LIST_DIR to get current directory's relative path.
+  string(REPLACE "@BUILD_HELPER_USE_SRC_DIR@" "" _LIB_CURRENT_DIR_RPATH ${CMAKE_CURRENT_LIST_DIR})
+  # If exists, remove the leading "/".
+  string(REGEX REPLACE "^/" "" _LIB_CURRENT_DIR_RPATH "${_LIB_CURRENT_DIR_RPATH}")
+  set(${ret} ${_LIB_CURRENT_DIR_RPATH} PARENT_SCOPE)
+endfunction()
+
+# Builds a shared C++ library. Inspired by
+# https://github.com/abseil/abseil-cpp/blob/master/CMake/AbseilHelpers.cmake
+#
+# Source directory is @BUILD_HELPER_USE_SRC_DIR@
+# Includes directory is @BUILD_HELPER_USE_INCLUDE_DIR@
+# Project name is @BUILD_HELPER_USE_PREFIX@
+#
+# Example 1:
+# Assume that:
+# * files for this library live in @BUILD_HELPER_USE_SRC_DIR@/@BUILD_HELPER_USE_PREFIX@/common/
+# then
+# @BUILD_HELPER_USE_PREFIX@_cxx_library(
+#   NAME "utils"
+#   HDRS
+#     "utils.hpp"
+#   SRCS
+#     "utils.cpp"
+# )
+# will generate two libraries:
+# 1) @BUILD_HELPER_USE_SRC_DIR@_common_utils
+# 2) @BUILD_HELPER_USE_SRC_DIR@::common::utils.
+#
+# Example 2:
+# Assume that:
+# * files for this library live in @BUILD_HELPER_USE_SRC_DIR@/@BUILD_HELPER_USE_PREFIX@/
+# then
+# @BUILD_HELPER_USE_PREFIX@_cxx_library(
+#   NAME "mime"
+#   HDRS
+#     "mime.hpp"
+#   SRCS
+#     "mime.cpp"
+#   DEPS
+#    @BUILD_HELPER_USE_PREFIX@::common::utils
+# )
+# will generate two libraries:
+# 1) @BUILD_HELPER_USE_PREFIX@_mime
+# 2) @BUILD_HELPER_USE_PREFIX@::mime
+function(@BUILD_HELPER_USE_PREFIX@_cxx_library)
+  cmake_parse_arguments(BUILD_HELPER_CXX_LIB
+    ""
+    "NAME"
+    "HDRS;SRCS;DEPS"
+    ${ARGN}
+  )
+  set(_LIB_CURRENT_DIR_RPATH "")
+  build_helper_curdir_rpath(_LIB_CURRENT_DIR_RPATH)
+  string(REPLACE "/" "_" _LIB_PREFIX ${_LIB_CURRENT_DIR_RPATH}) 
+  set(_LIB_OUTPUT_NAME "${_LIB_PREFIX}_${BUILD_HELPER_CXX_LIB_NAME}")
+
+  add_library(${_LIB_OUTPUT_NAME} SHARED "")
+  set_target_properties(${_LIB_OUTPUT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+  target_sources(${_LIB_OUTPUT_NAME} 
+    PRIVATE 
+    ${BUILD_HELPER_CXX_LIB_SRCS} 
+    ${BUILD_HELPER_CXX_LIB_HDRS})
+  target_link_libraries(${_LIB_OUTPUT_NAME}
+    PUBLIC
+    ${BUILD_HELPER_CXX_LIB_DEPS}
+  )
+  target_include_directories(${_LIB_OUTPUT_NAME}
+    PUBLIC
+      ${Boost_INCLUDE_DIRS}
+      ${BUILD_HELPER_USE_INCLUDE_DIRS})
+
+  # Get "professional looking" library alias name.
+  # Start by substituting "/" in current directory's relative path with "::".
+  # e.g. _LIB_ALIAS_PREFIX := onua::common
+  string(REPLACE "/" "::" _LIB_ALIAS_PREFIX ${_LIB_CURRENT_DIR_RPATH})
+  # Set library alias name with "::" delimiter.
+  set(_LIB_ALIAS_NAME "${_LIB_ALIAS_PREFIX}::${BUILD_HELPER_CXX_LIB_NAME}")
+  add_library(${_LIB_ALIAS_NAME} ALIAS ${_LIB_OUTPUT_NAME})
+endfunction()
+
+# Builds a Boost C++ unit test. Inspired by
+# https://github.com/abseil/abseil-cpp/blob/master/CMake/AbseilHelpers.cmake
+#
+# Example:
+# Assume that:
+# * files for this library live in @BUILD_HELPER_USE_SRC_DIR@/@BUILD_HELPER_USE_PREFIX@/
+# then
+# @BUILD_HELPER_USE_PREFIX@_cxx_library(
+#   NAME "mime_test"
+#   HDRS
+#     "mime.hpp"
+#   SRCS
+#     "mime_test.cpp"
+#   DEPS
+#    @BUILD_HELPER_USE_PREFIX@::mime
+#    @BUILD_HELPER_USE_PREFIX@::common::utils
+# )
+function(@BUILD_HELPER_USE_PREFIX@_cxx_test)
+  cmake_parse_arguments(BUILD_HELPER_CXX_TEST
+    ""
+    "NAME;"
+    "SRCS;DEPS"
+    ${ARGN}
+  )
+
+  # Create a test prefix based on current directory's path relative to
+  # BUILD_HELPER_SRC_DIR.
+  set(_LIB_CURRENT_DIR_RPATH "")
+  build_helper_curdir_rpath(_LIB_CURRENT_DIR_RPATH)
+  
+  set(_TEST_OUTPUT_NAME "${BUILD_HELPER_CXX_TEST_NAME}")
+
+  add_executable(${_TEST_OUTPUT_NAME} "")
+  set_target_properties(${_TEST_OUTPUT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+  target_sources(${_TEST_OUTPUT_NAME} PRIVATE
+    ${BUILD_HELPER_CXX_TEST_SRCS})
+  target_link_libraries(${_TEST_OUTPUT_NAME}
+    PUBLIC
+    ${BUILD_HELPER_CXX_TEST_DEPS}
+  )
+  target_include_directories(${_TEST_OUTPUT_NAME}
+    PUBLIC
+      ${Boost_INCLUDE_DIRS}
+      @BUILD_HELPER_USE_INCLUDE_DIR@
+  )
+
+  string(REPLACE "/" "-" _TEST_PREFIX ${_LIB_CURRENT_DIR_RPATH})
+  set(_CTEST_NAME "${_TEST_PREFIX}-${BUILD_HELPER_CXX_TEST_NAME}")
+  add_test(${_CTEST_NAME} ${_TEST_OUTPUT_NAME})
+endfunction()

@@ -1,0 +1,27 @@
+# Needed in every CMakeLists.txt that forms a path to tests via
+# add_subdirectory() calls.
+enable_testing()
+
+variad_cxx_library(
+  NAME "utils"
+  HDRS 
+    "utils.hpp"
+  SRCS
+    "utils.cpp"
+)
+
+variad_cxx_library(
+  NAME "heavy_variant"
+  HDRS 
+    "heavy_variant.hpp"
+  SRCS
+    "heavy_variant.cpp"
+  DEPS
+    variad::utils
+)
+
+variad_cxx_test(
+  NAME "heavy_variant_test"
+  SRCS
+    "heavy_variant_test.cpp"
+)
