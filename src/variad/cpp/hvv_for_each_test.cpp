@@ -10,7 +10,8 @@ BOOST_AUTO_TEST_SUITE(VariadHvvForEachTest)
 
 BOOST_AUTO_TEST_CASE(SimpleForEach)
 {
-  BOOST_TEST(HVV_FOR_EACH_1(TEST_MULTIPLY_ARG_, abc, 1, 2, 3, 4, 5) == 120);
+  int factorial = HVV_FOR_EACH_1(TEST_MULTIPLY_ARG_, abc, 1, 2, 3, 4, 5);
+  BOOST_TEST(factorial == 120);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
