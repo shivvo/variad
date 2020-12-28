@@ -1,3 +1,4 @@
 build
 CMake/BuildHelper.cmake
 .DS_Store
+.pyc
