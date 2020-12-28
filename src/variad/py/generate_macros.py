@@ -3,6 +3,7 @@ import sys
 import generate_arg
 import generate_cat
 import generate_defer
+import generate_inc
 
 def load_config(config, output_dir):
     macro_prefix = config['macro_prefix']
@@ -11,6 +12,7 @@ def load_config(config, output_dir):
     generate_arg.generate_arg(macro_prefix, header_guard_prefix, supported_size, output_dir)
     generate_cat.generate_cat(macro_prefix, header_guard_prefix, supported_size, output_dir)
     generate_defer.generate_defer(macro_prefix, header_guard_prefix, supported_size, output_dir)
+    generate_inc.generate_inc(macro_prefix, header_guard_prefix, supported_size, output_dir)
 
 if __name__ == '__main__':
     if (len(sys.argv) == 3):
