@@ -1,12 +1,14 @@
 import json
 import sys
 import generate_arg
+import generate_cat
 
 def load_config(config, output_dir):
     macro_prefix = config['macro_prefix']
     header_guard_prefix = config['header_guard_prefix']
     supported_size = int(config['supported_size'])
     generate_arg.generate_arg(macro_prefix, header_guard_prefix, supported_size, output_dir)
+    generate_cat.generate_cat(macro_prefix, header_guard_prefix, supported_size, output_dir)
 
 if __name__ == '__main__':
     if (len(sys.argv) == 3):
