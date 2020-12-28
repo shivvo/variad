@@ -35,13 +35,15 @@ def generate_for_each_iter1_macro(macro_prefix, nested_loops_idx):
     Generate the FOR_EACH_X_ITER1 macro, which is the base case and final
     iteration of the for loop.
     """
+    macro_lines = ['// ITER1. Invokes F_0.']
     nested_loops_id = nested_loops_idx + 1
+
     iter1_define = '#define {}_FOR_EACH_{}_ITER1(F, idx, fixed_arg, va_arg, ...) '.format(
         macro_prefix.upper(), nested_loops_id)
     iter1_body = 'F##0(idx, fixed_arg, va_arg)'
+    macro_lines.append(iter1_define + iter1_body)
 
-    iter1_macro = iter1_define + iter1_body
-    return iter1_macro
+    return macro_lines
 
 
 def generate_for_each_itern_macro(macro_prefix, nested_loops_idx, iter_idx):
@@ -51,18 +53,27 @@ def generate_for_each_itern_macro(macro_prefix, nested_loops_idx, iter_idx):
     corresponding N-1 macro.
     """
     nested_loops_id = nested_loops_idx + 1
-    iter_id = iter_idx + 1
-    itern_define = '#define {0}_FOR_EACH_{1}_ITER{2}(F, idx, fixed_arg, va_arg, ...) {0}_FOR_EACH_{1}_ITER{2}_IMPL(F, idx, fixed_arg, va_arg, __VA_ARGS__)\n'.format(
+    iter_id = iter_idx
+    macro_lines = ['// ITER{}. Invokes F_1'.format(iter_id)]
+
+    # Generate ITERN macro, which calls an ITERN_IMPL macro to accomadate
+    # expansion of arguments.
+    itern_define = '#define {0}_FOR_EACH_{1}_ITER{2}(F, idx, fixed_arg, va_arg, ...) \\'.format(
         macro_prefix.upper(), nested_loops_id, iter_id)
-    itern_define_impl = '#define {}_FOR_EACH_{}_ITER{}_IMPL(F, idx, fixed_arg, va_arg, ...) \\\n'.format(
+    itern_define_body = (' ' * 4) + '{0}_FOR_EACH_{1}_ITER{2}_IMPL(F, idx, fixed_arg, va_arg, __VA_ARGS__)'.format(
         macro_prefix.upper(), nested_loops_id, iter_id)
-    itern_apply_func = (' ' * 4) + 'F##1(idx, fixed_arg, va_arg) '
+    macro_lines.append(itern_define)
+    macro_lines.append(itern_define_body)
+
+    itern_impl_define = '#define {}_FOR_EACH_{}_ITER{}_IMPL(F, idx, fixed_arg, va_arg, ...) \\'.format(
+        macro_prefix.upper(), nested_loops_id, iter_id)
+    itern_impl_invoke_func = (' ' * 4) + 'F##1(idx, fixed_arg, va_arg) '
     itern_next_iter = '{0}_FOR_EACH_{1}_ITER{2}(F, {0}_CAT_1({0}_INC_, idx), fixed_arg, __VA_ARGS__)'.format(
         macro_prefix.upper(), nested_loops_id, iter_id - 1)
+    macro_lines.append(itern_impl_define)
+    macro_lines.append(itern_impl_invoke_func + itern_next_iter)
 
-    itern_macro = itern_define + itern_define_impl + \
-        itern_apply_func + itern_next_iter
-    return itern_macro
+    return macro_lines
 
 
 def generate_for_each(macro_prefix, header_guard_prefix, supported_size, nested_loops_count, output_dir):
@@ -77,7 +88,6 @@ def generate_for_each(macro_prefix, header_guard_prefix, supported_size, nested_
     # Generate #includes for CAT, DEFER, INC macros
     lines.append('#include "{}_arg.hpp"'.format(macro_prefix.lower()))
     lines.append('#include "{}_cat.hpp"'.format(macro_prefix.lower()))
-    lines.append('#include "{}_defer.hpp"'.format(macro_prefix.lower()))
     lines.append('#include "{}_inc.hpp"'.format(macro_prefix.lower()))
     lines.append('')
 
@@ -86,11 +96,12 @@ def generate_for_each(macro_prefix, header_guard_prefix, supported_size, nested_
         # Generate macro which invokes the correct iteration
         lines += generate_for_each_dispatch_macro(macro_prefix, x)
         lines.append('')
-        # Generate the ITER1 macro.
-        lines.append(generate_for_each_iter1_macro(macro_prefix, x))
         # Generate the ITERN macros.
-        for i in range(1, supported_size):
-            lines.append(generate_for_each_itern_macro(macro_prefix, x, i))
+        for i in range(supported_size, 1, -1):
+            lines += generate_for_each_itern_macro(macro_prefix, x, i)
+        # Generate the ITER1 macro.
+        lines += generate_for_each_iter1_macro(macro_prefix, x)
+
         lines.append('')
 
     lines.append(utils.generate_header_end())
