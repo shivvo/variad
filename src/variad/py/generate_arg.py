@@ -9,7 +9,7 @@ def generate_arg(macro_prefix, header_guard_prefix, supported_size, output_dir):
     # Generate macro for ARG_N, where N = `supported_size` + 1,
     args_list = ['_{}'.format(i) for i in range(1, supported_size + 1)]
     args_str = ', '.join(args_list)
-    arg_n = '#define {}_ARG_{}({}, N) N'.format(macro_prefix.upper(), supported_size + 1, args_str)
+    arg_n = '#define {}_ARG_{}({}, N, ...) N'.format(macro_prefix.upper(), supported_size + 1, args_str)
     lines.append(arg_n)
 
     # Generate macro for getting the length of the variable arguments, up to `supported_size`.

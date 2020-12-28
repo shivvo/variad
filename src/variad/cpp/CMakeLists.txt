@@ -17,11 +17,23 @@ variad_cxx_library(
   SRCS
     "heavy_variant.cpp"
   DEPS
-    variad::utils
+    variad::cpp::utils
 )
 
 variad_cxx_test(
   NAME "heavy_variant_test"
   SRCS
     "heavy_variant_test.cpp"
+)
+
+variad_cxx_test(
+  NAME "hvv_for_each_test"
+  SRCS
+    "hvv_for_each_test.cpp"
+)
+
+variad_cxx_test(
+  NAME "hvv_arg_test"
+  SRCS
+    "hvv_arg_test.cpp"
 )

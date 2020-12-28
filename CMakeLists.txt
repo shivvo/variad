@@ -33,4 +33,5 @@ include(BuildHelper)
 # add_subdirectory() calls.
 enable_testing()
 
-add_subdirectory("src/${PROJECT_NAME_STR}")
+add_subdirectory("src/${PROJECT_NAME_STR}/cpp")
+
