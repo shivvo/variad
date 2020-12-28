@@ -1,5 +1,6 @@
 import utils
 
+# Generate CAT macro which concatenate its two arguments.
 def generate_cat(macro_prefix, header_prefix, supported_size, output_dir):
     lines = utils.generate_header_begin(macro_prefix, header_prefix, 'cat')
     lines.append('')
