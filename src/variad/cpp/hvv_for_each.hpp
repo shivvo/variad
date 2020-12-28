@@ -6,6 +6,13 @@
 #include "hvv_defer.hpp"
 #include "hvv_inc.hpp"
 
+// FOR_EACH applies Fn(idx, fixed_arg, va_arg) for each va_arg in __VA_ARGS__.
+// idx is 0 for the first iteration and for each subsequent iteration increases
+// by 1.
+
+// Fn refers to two macros. F is the prefix of two macros, F_1 and F_0. F_1 is
+// used for non-final for loop iterations and F_0 is used by the final
+// iteration.
 #define HVV_FOR_EACH_1(F, fixed_args, ...) \
     HVV_CAT_2(HVV_FOR_EACH_1_ITER, HVV_ARG_LENGTH(__VA_ARGS__))(F, 0, fixed_arg, __VA_ARGS__)
 
@@ -32,6 +39,13 @@
 #define HVV_FOR_EACH_1_ITER8_IMPL(F, idx, fixed_arg, va_arg, ...) \
     F##1(idx, fixed_arg, va_arg) HVV_FOR_EACH_1_ITER7(F, HVV_CAT_1(HVV_INC_, idx), fixed_arg, __VA_ARGS__)
 
+// FOR_EACH applies Fn(idx, fixed_arg, va_arg) for each va_arg in __VA_ARGS__.
+// idx is 0 for the first iteration and for each subsequent iteration increases
+// by 1.
+
+// Fn refers to two macros. F is the prefix of two macros, F_1 and F_0. F_1 is
+// used for non-final for loop iterations and F_0 is used by the final
+// iteration.
 #define HVV_FOR_EACH_2(F, fixed_args, ...) \
     HVV_CAT_2(HVV_FOR_EACH_2_ITER, HVV_ARG_LENGTH(__VA_ARGS__))(F, 0, fixed_arg, __VA_ARGS__)
 
