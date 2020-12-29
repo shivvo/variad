@@ -1,6 +1,6 @@
 {
-  "macro_prefix": "HVV",
-  "header_guard_prefix": "VARIAD_CPP",
+  "macro_prefix": "",
+  "header_guard_prefix": "VARIAD_CPP_",
   "supported_size": 8
 }
 
