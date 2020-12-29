@@ -46,7 +46,6 @@
   typedef std::shared_ptr< HVV_DEFINE_INTERNAL_NAME(name) > HVV_DEFINE_NAME_EXPAND(name); \
   class HVV_DEFINE_INTERNAL_NAME(name) { \
   }; \
-  //HVV_DEFINE_FOR_EACH_VALUE_TYPES(name, __VA_ARGS__) \
 
 
 BOOST_AUTO_TEST_SUITE(VariadHeavyVariantTest)
