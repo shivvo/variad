@@ -12,7 +12,7 @@ FOR_EACH_COMMENT_TEMPLATE = '''
 '''
 
 FOR_EACH_TOP_LEVEL_TEMPLATE = \
-    '''#define {0}FOR_EACH{1}(F, fixed_args, ...) \\
+    '''#define {0}FOR_EACH{1}(F, fixed_arg, ...) \\
     {0}CAT_2({0}FOR_EACH{1}_ITER, {0}ARG_LENGTH(__VA_ARGS__))(F, 0, fixed_arg, __VA_ARGS__)'''
 
 FOR_EACH_ITER1_TEMPLATE = \

@@ -15,7 +15,7 @@
 // for forming expressions, where F1 generates a portion of an expression with
 // some operand, and F0 generates the final term without any operand.
 
-#define FOR_EACH1(F, fixed_args, ...) \
+#define FOR_EACH1(F, fixed_arg, ...) \
     CAT_2(FOR_EACH1_ITER, ARG_LENGTH(__VA_ARGS__))(F, 0, fixed_arg, __VA_ARGS__)
 
 // ITER8. Invokes F1.
@@ -66,7 +66,7 @@
 // for forming expressions, where F1 generates a portion of an expression with
 // some operand, and F0 generates the final term without any operand.
 
-#define FOR_EACH2(F, fixed_args, ...) \
+#define FOR_EACH2(F, fixed_arg, ...) \
     CAT_2(FOR_EACH2_ITER, ARG_LENGTH(__VA_ARGS__))(F, 0, fixed_arg, __VA_ARGS__)
 
 // ITER8. Invokes F1.
