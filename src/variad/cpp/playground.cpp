@@ -1,7 +1,10 @@
 // Macro expansion playground.
 // gcc -E src/variad/cpp/playground.cpp
 
+#ifndef PLAYGROUND_ONLY
 #include <memory>
+#endif
+
 #include "for_each.hpp"
 
 #define TEST_MULTIPLY_ARG_0(idx, fixed_arg, va_arg) va_arg
@@ -15,27 +18,44 @@
 #define VG_CAT_3(a, b) VG_CAT_2(a, b)
 #define VG_CAT_4(a, b) VG_CAT_3(a, b)
 
+// Define list of typenames when declaring a template.
 #define VG_TYPE_NAME_0(_1, _2, t) typename t
 #define VG_TYPE_NAME_1(_1, _2, t) typename t,
 #define VG_DEFINE_0(a, ...) template <FOR_EACH2(VG_TYPE_NAME_, _, __VA_ARGS__)>
 #define VG_DEFINE_1(a)
 #define VG_DEFINE(template_args) VG_CAT_3(VG_DEFINE_, ARG_IS_SINGULAR(template_args)) template_args 
 
+// Define a list of typenames for template instantiation.
 #define VG_ENCLOSED_LIST_0(a, ...) <__VA_ARGS__>
 #define VG_ENCLOSED_LIST_1(a)
 #define VG_ENCLOSED_LIST(template_args) VG_CAT_3(VG_ENCLOSED_LIST_, ARG_IS_SINGULAR(template_args)) template_args 
-
 
 #define VT_CAT_1(a, b) a##b
 #define VT_CAT_2(a, b) VG_CAT_1(a, b)
 #define VT_CAT_3(a, b) VG_CAT_2(a, b)
 #define VT_CAT_4(a, b) VG_CAT_3(a, b)
 
+#define VTF_DEFINE_IMPL(idx, variant_name, tag_idx, tag_name, field_type, field_name) \
+  public: \
+    field_type field_name;
+#define VTF_DEFINE_EXPANDED(idx, fixed_arg, field_info) \
+  VTF_DEFINE_IMPL(idx, fixed_arg, field_info)
+#define VTF_DEFINE_0(idx, fixed_arg, field_info) \
+  VTF_DEFINE_EXPANDED(idx, ARG_IDENTITY fixed_arg, ARG_IDENTITY field_info)
+#define VTF_DEFINE_1(idx, fixed_arg, field_info) \
+  VTF_DEFINE_EXPANDED(idx, ARG_IDENTITY fixed_arg, ARG_IDENTITY field_info)
+
+#define VT_CONSTRUCTOR(idx, variant_name, tag_name, template_types, ...)
+
 // Define tag template and extra data fields.
 #define VT_DEFINE_INTERNAL_0_IMPL(idx, variant_name, tag_name, template_types, ...) \
   namespace tag_name { \
     VG_DEFINE(template_types) \
-    class t_internal : public variant_name::t {}; \
+    class t_internal : public variant_name::t { \
+      FOR_EACH2(VTF_DEFINE_, (variant_name, idx, tag_name), __VA_ARGS__) \
+      private: \
+        t_internal() {} \
+    }; \
     VG_DEFINE(template_types)\
     using t = std::shared_ptr<t_internal VG_ENCLOSED_LIST(template_types) >; \
   }
@@ -64,10 +84,25 @@ namespace variant_name { \
 VARIANT(
     Optional,
     (None),
-    (Some, (_, T), (T, value))
+    (Some, 
+     (_, T), 
+     (T, value)),
+    (StatusOr, 
+     (_, T), 
+     (T, value)),
+    (Outcome, 
+     (_, E, R, T), 
+     (E, unrecoverable_error), 
+     (R, recoverable_error), 
+     (T, value)),
+    (SomeInt, 
+     (_), 
+     (int, value))
     )
 
-int factorial = FOR_EACH1(TEST_MULTIPLY_ARG_, abc, 1, 2, 3, 4, 5);
-int factorial2 = FOR_EACH2(TEST_MULTIPLY_IDX_, 123, a, b, c, d, e);
-int is_single = ARG_IS_SINGULAR((Some, (int, value)));
-int is_single2 = ARG_IS_SINGULAR((None));
+int main(int argc, char** argv) {
+  int factorial = FOR_EACH1(TEST_MULTIPLY_ARG_, abc, 1, 2, 3, 4, 5);
+  int factorial2 = FOR_EACH2(TEST_MULTIPLY_IDX_, 123, a, b, c, d, e);
+  int is_single = ARG_IS_SINGULAR((Some, (int, value)));
+  int is_single2 = ARG_IS_SINGULAR((None));
+}
