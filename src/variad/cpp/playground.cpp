@@ -45,7 +45,7 @@
 #define VTF_DEFINE_1(idx, fixed_arg, field_info) \
   VTF_DEFINE_EXPANDED(idx, ARG_IDENTITY fixed_arg, ARG_IDENTITY field_info)
 
-#define VT_CONSTRUCTOR(idx, variant_name, tag_name, template_types, ...)
+#define VT_FUNCTION_OF(idx, variant_name, tag_name, template_types, ...)
 
 // Define tag template and extra data fields.
 #define VT_DEFINE_INTERNAL_0_IMPL(idx, variant_name, tag_name, template_types, ...) \
