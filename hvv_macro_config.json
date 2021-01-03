@@ -1,0 +1,7 @@
+{
+  "macro_prefix": "HVV_",
+  "header_guard_prefix": "VARIAD_",
+  "supported_size": 8,
+  "output_dir": "src/cpp/variad"
+}
+

@@ -7,13 +7,14 @@ import generate_for_each
 import generate_inc
 
 
-def generate_macros(config, output_dir):
+def generate_macros(config):
     """
     Generate macros using the given macro config and output directory.
     """
     macro_prefix = config['macro_prefix']
     header_guard_prefix = config['header_guard_prefix']
     supported_size = int(config['supported_size'])
+    output_dir = config['output_dir']
     generate_arg.generate_arg(
         macro_prefix, header_guard_prefix, supported_size, output_dir)
     generate_cat.generate_cat(
@@ -25,7 +26,7 @@ def generate_macros(config, output_dir):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 3:
+    if len(sys.argv) == 2:
         with open(sys.argv[1], 'r') as config_file:
             config = json.load(config_file)
-            generate_macros(config, sys.argv[2])
+            generate_macros(config)

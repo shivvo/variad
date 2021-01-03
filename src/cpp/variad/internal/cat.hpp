@@ -1,5 +1,5 @@
-#ifndef VARIAD_CPP_CAT
-#define VARIAD_CPP_CAT
+#ifndef VARIAD_INTERNAL_CAT
+#define VARIAD_INTERNAL_CAT
 
 #define CAT_1(a, b) a##b
 #define CAT_2(a, b) CAT_1(a, b)

@@ -1,5 +1,5 @@
-#ifndef VARIAD_CPP_ARG
-#define VARIAD_CPP_ARG
+#ifndef VARIAD_INTERNAL_ARG
+#define VARIAD_INTERNAL_ARG
 
 #define ARG_9TH(_1, _2, _3, _4, _5, _6, _7, _8, N, ...) N
 

@@ -1,5 +1,5 @@
-#ifndef VARIAD_CPP_INC
-#define VARIAD_CPP_INC
+#ifndef VARIAD_INTERNAL_INC
+#define VARIAD_INTERNAL_INC
 
 // INC_N gives back N+1
 #define INC_0 1

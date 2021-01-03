@@ -1,5 +1,5 @@
-#ifndef VARIAD_CPP_FOR_EACH
-#define VARIAD_CPP_FOR_EACH
+#ifndef VARIAD_INTERNAL_FOR_EACH
+#define VARIAD_INTERNAL_FOR_EACH
 
 #include "arg.hpp"
 #include "cat.hpp"
