@@ -14,8 +14,8 @@ find_package(Boost 1.72.0 REQUIRED)
 
 # Build Helper - configuration variables. Must set before configuring the
 # CMake module.
-set(BUILD_HELPER_USE_SRC_DIR "${CMAKE_SOURCE_DIR}/src")
-set(BUILD_HELPER_USE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/src")
+set(BUILD_HELPER_USE_SRC_DIR "${CMAKE_SOURCE_DIR}/src/cpp")
+set(BUILD_HELPER_USE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/src/cpp/variad/internal")
 set(BUILD_HELPER_USE_PREFIX "${PROJECT_NAME_STR}")
 # Build Helper - configure CMake module.
 configure_file(
@@ -33,5 +33,5 @@ include(BuildHelper)
 # add_subdirectory() calls.
 enable_testing()
 
-add_subdirectory("src/${PROJECT_NAME_STR}/cpp")
+add_subdirectory("src/cpp/${PROJECT_NAME_STR}")
 
