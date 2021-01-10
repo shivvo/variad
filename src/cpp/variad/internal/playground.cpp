@@ -1,8 +1,9 @@
 // Macro expansion playground.
-// gcc -E src/variad/cpp/playground.cpp
+// g++ -std=c++11 -E src/variad/cpp/playground.cpp
 
 #ifndef PLAYGROUND_ONLY
 #include <memory>
+#include <string>
 #endif
 
 #include "for_each.hpp"
@@ -80,7 +81,7 @@ namespace variant_name { \
   using t = std::shared_ptr<t_internal>; \
   FOR_EACH1(VT_DEFINE_, variant_name, __VA_ARGS__)  \
 }
-
+/*
 VARIANT(
     Optional,
     (None),
@@ -99,10 +100,97 @@ VARIANT(
      (_), 
      (int, value))
     )
+*/
+template<typename T, typename V> class TestClass;
+
+template<typename T, typename V>
+class TestClass {};
+
+namespace variad {
+  template <typename T>
+  class IntOr {
+   public:
+    enum Type {
+      TYPE_INTEGER,
+      TYPE_T
+    };
+    IntOr(const int& int_value):
+      type_(Type::TYPE_INTEGER),
+      int_value_(int_value),
+      t_value_(nullptr) {}
+    IntOr(const int&& int_value):
+      type_(Type::TYPE_INTEGER),
+      int_value_(int_value),
+      t_value_(nullptr) {}
+    IntOr(std::shared_ptr<T> t_value):
+      type_(Type::TYPE_INTEGER),
+      int_value_(0),
+      t_value_(t_value) {}
+   private:
+    Type type_;
+    int int_value_;
+    std::shared_ptr<T> t_value_;
+  };
+}
+
+namespace Tree {
+  namespace internal {
+    template <typename K, typename V>
+    class t {
+     public:
+      t(int tag): m_tag(tag) {}
+     private:
+      int m_tag;
+    };
+  }
+  template <typename K, typename V>
+  using t = variad::IntOr<internal::t<K, V>>;
+
+  namespace Leaf {
+    namespace internal {
+      const int tag = 0;
+    }
+
+    template <typename K, typename V>
+    Tree::t<K, V> of() {
+      return Leaf::internal::tag;
+    }
+  }
+
+  namespace Node2 {
+    namespace internal {
+      const int tag = 1;
+      
+      template <typename K, typename V>
+      class t : public Tree::internal::t<K, V> {
+       public:
+        t(int tag, K key, V value, Tree::t<K, V> left_child, Tree::t<K, V> right_child): 
+          Tree::internal::t<K, V>(tag),
+          m_key(key), m_value(value), m_left_child(left_child), m_right_child(right_child) {}; 
+       private:
+        K m_key;
+        V m_value;
+        Tree::t<K, V> m_left_child;
+        Tree::t<K, V> m_right_child;
+      };
+    }
+
+    template <typename K, typename V>
+    Tree::t<K, V> of(K key, V value, Tree::t<K, V> left_child, Tree::t<K, V> right_child) {
+      auto ret = std::make_shared<Node2::internal::t<K, V>>(Node2::internal::tag, key, value, left_child, right_child);
+      return Tree::t<K, V>(ret);
+    }
+  }
+}
 
 int main(int argc, char** argv) {
   int factorial = FOR_EACH1(TEST_MULTIPLY_ARG_, abc, 1, 2, 3, 4, 5);
   int factorial2 = FOR_EACH2(TEST_MULTIPLY_IDX_, 123, a, b, c, d, e);
   int is_single = ARG_IS_SINGULAR((Some, (int, value)));
   int is_single2 = ARG_IS_SINGULAR((None));
+
+  variad::IntOr<bool> int_or_bool(std::make_shared<bool>(true));
+  variad::IntOr<bool> int_or_bool2 = int_or_bool;
+  Tree::t<std::string, std::string> tree = Tree::Leaf::of<std::string, std::string>();
+  tree = Tree::Node2::of(std::string("a"), std::string("b"), Tree::Leaf::of<std::string, std::string>(), Tree::Leaf::of<std::string, std::string>());
 }
