@@ -114,6 +114,10 @@ namespace variad {
       TYPE_INTEGER,
       TYPE_T
     };
+    IntOr():
+      type_(Type::TYPE_INTEGER),
+      int_value_(0),
+      t_value_(nullptr) {}
     IntOr(const int& int_value):
       type_(Type::TYPE_INTEGER),
       int_value_(int_value),
