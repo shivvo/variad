@@ -111,35 +111,23 @@ template <typename T, typename V> class TestClass;
 template <typename T, typename V> class TestClass {};
 
 namespace variad {
-  template <typename T>
-  class IntOr {
-   public:
-    enum Type {
-      TYPE_INTEGER,
-      TYPE_T
-    };
-    IntOr():
-      type_(Type::TYPE_INTEGER),
-      int_value_(0),
-      t_value_(nullptr) {}
-    IntOr(const int& int_value):
-      type_(Type::TYPE_INTEGER),
-      int_value_(int_value),
-      t_value_(nullptr) {}
-    IntOr(const int&& int_value):
-      type_(Type::TYPE_INTEGER),
-      int_value_(int_value),
-      t_value_(nullptr) {}
-    IntOr(std::shared_ptr<T> t_value):
-      type_(Type::TYPE_INTEGER),
-      int_value_(0),
-      t_value_(t_value) {}
-   private:
-    Type type_;
-    int int_value_;
-    std::shared_ptr<T> t_value_;
-  };
-}
+template <typename T> class IntOr {
+public:
+  enum Type { TYPE_INTEGER, TYPE_T };
+  IntOr() : type_(Type::TYPE_INTEGER), int_value_(0), t_value_(nullptr) {}
+  IntOr(const int &int_value)
+      : type_(Type::TYPE_INTEGER), int_value_(int_value), t_value_(nullptr) {}
+  IntOr(const int &&int_value)
+      : type_(Type::TYPE_INTEGER), int_value_(int_value), t_value_(nullptr) {}
+  IntOr(std::shared_ptr<T> t_value)
+      : type_(Type::TYPE_INTEGER), int_value_(0), t_value_(t_value) {}
+
+private:
+  Type type_;
+  int int_value_;
+  std::shared_ptr<T> t_value_;
+};
+} // namespace variad
 
 namespace Tree {
 namespace internal {
