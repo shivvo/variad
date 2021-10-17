@@ -7,6 +7,9 @@ project("${PROJECT_NAME_STR}")
 # C++11
 set(CMAKE_CXX_STANDARD 11)
 
+# Clang - export compilation database.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Boost
 set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_MULTITHREADED      ON)
