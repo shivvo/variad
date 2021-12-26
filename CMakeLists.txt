@@ -13,7 +13,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Boost
 set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_MULTITHREADED      ON)
-find_package(Boost 1.72.0 REQUIRED)
+find_package(Boost 1.71.0 REQUIRED)
 
 # Build Helper - configuration variables. Must set before configuring the
 # CMake module.

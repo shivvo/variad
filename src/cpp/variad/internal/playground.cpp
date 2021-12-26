@@ -1,5 +1,5 @@
 // Macro expansion playground.
-// g++ -std=c++11 -E src/variad/cpp/playground.cpp
+// g++ -std=c++11 -E -DPLAYGROUND_ONLY src/variad/cpp/playground.cpp
 
 #ifndef PLAYGROUND_ONLY
 #include <memory>
@@ -113,7 +113,8 @@ template <typename T, typename V> class TestClass {};
 namespace variad {
 template <typename T> class IntOr {
 public:
-  enum Type { TYPE_INTEGER, TYPE_T };
+  enum Type { TYPE_UNDEFINED, TYPE_INTEGER, TYPE_T };
+  IntOr() : type_(Type::TYPE_UNDEFINED) {}
   IntOr(const int &int_value)
       : type_(Type::TYPE_INTEGER), int_value_(int_value), t_value_(nullptr) {}
   IntOr(const int &&int_value)
@@ -145,9 +146,7 @@ namespace internal {
 const int tag = 0;
 }
 
-template <typename K, typename V> Tree::t<K, V> of() {
-  return Leaf::internal::tag;
-}
+int of() { return Leaf::internal::tag; }
 } // namespace Leaf
 
 namespace Node2 {
@@ -156,8 +155,8 @@ const int tag = 1;
 
 template <typename K, typename V> class t : public Tree::internal::t<K, V> {
 public:
-  t(int tag, K key, V value, Tree::t<K, V> left_child,
-    Tree::t<K, V> right_child)
+  template <typename T1, typename T2, typename T3, typename T4>
+  t(int tag, T1 key, T2 value, T3 left_child, T4 right_child)
       : Tree::internal::t<K, V>(tag), m_key(key), m_value(value),
         m_left_child(left_child), m_right_child(right_child){};
 
@@ -169,9 +168,9 @@ private:
 };
 } // namespace internal
 
-template <typename K, typename V>
-Tree::t<K, V> of(K key, V value, Tree::t<K, V> left_child,
-                 Tree::t<K, V> right_child) {
+template <typename K, typename V, typename T1, typename T2, typename T3, typename T4>
+Tree::t<K, V> of(T1 key, T2 value, T3 left_child,
+                 T4 right_child) {
   auto ret = std::make_shared<Node2::internal::t<K, V>>(
       Node2::internal::tag, key, value, left_child, right_child);
   return Tree::t<K, V>(ret);
@@ -185,11 +184,8 @@ int main(int argc, char **argv) {
   int is_single = ARG_IS_SINGULAR((Some, (int, value)));
   int is_single2 = ARG_IS_SINGULAR((None));
 
-  variad::IntOr<bool> int_or_bool(std::make_shared<bool>(true));
+  variad::IntOr<bool> int_or_bool = std::make_shared<bool>(true);
   variad::IntOr<bool> int_or_bool2 = int_or_bool;
-  Tree::t<std::string, std::string> tree =
-      Tree::Leaf::of<std::string, std::string>();
-  tree = Tree::Node2::of(std::string("a"), std::string("b"),
-                         Tree::Leaf::of<std::string, std::string>(),
-                         Tree::Leaf::of<std::string, std::string>());
+  Tree::t<std::string, std::string> tree = Tree::Leaf::of();
+//  tree = Tree::Node2::of("a", "b", Tree::Leaf::of(), Tree::Leaf::of());
 }
