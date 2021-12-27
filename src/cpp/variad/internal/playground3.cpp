@@ -80,6 +80,41 @@
 #define VG_TEMPLATE_DECLARE(template_types)                                    \
   CAT_3(VG_TEMPLATE_DECLARE_OPT, ARG_IS_SINGULAR(template_types)) template_types
 
+// VT_DEFINE_TAGDATA
+// Variant Tag Define Tag with Data
+// VT_DEFINE_LVL2_OPT0
+// Variant Tag Define Level 2 Option 0
+// Define a variant tag with extra data.
+// * tag_idx - the tag index
+// * variant_name - the variant name
+// * template_types - the template types, format `(_, etc)`
+// * variant_tag_name - the variant tag name
+// * ... / __VA_ARGS__ - the variant tag data members, formatted as
+//   `(int, data)`
+#define VT_DEFINE_TAGDATA(tag_idx, variant_name, template_types,               \
+                          variant_tag_name, ...)
+
+#define VT_DEFINE_LVL2_OPT0(tag_idx, variant_name, template_types,             \
+                            variant_tag_name, ...)                             \
+  VT_DEFINE_TAGDATA(tag_idx, variant_name, template_types, variant_tag_name,   \
+                    __VA_ARGS__)
+
+// VT_DEFINE_TAGONLY
+// Variant Tag Define Tag Only
+// VT_DEFINE_LVL2_OPT1
+// Variant Tag Define Level 2 Option 1
+// Define a variant tag with no extra data.
+// * tag_idx - the tag index
+// * variant_name - the variant name
+// * template_types - the template types, format `(_, etc)`
+// * variant_tag_name - the variant tag name
+#define VT_DEFINE_TAGONLY(tag_idx, variant_name, template_types,               \
+                          variant_tag_name)
+
+#define VT_DEFINE_LVL2_OPT1(tag_idx, variant_name, template_types,             \
+                            variant_tag_name)                                  \
+  VT_DEFINE_TAGONLY(tag_idx, variant_name, template_types, variant_tag_name)
+
 // VT_DEFINE_LVL2
 // Variant Tag Define Level 2
 // Accepts index, variant_name, template args and variant tag definition.
@@ -88,7 +123,9 @@
 // * template_types - template tytpes is the `(_, etc)` format
 // * variant_tag_define - variant tag definition
 //   formatted as `(Tag, (int, data), etc.)`
-#define VT_DEFINE_LVL2(idx, variant_name, template_types, variant_tag_define)
+#define VT_DEFINE_LVL2(idx, variant_name, template_types, variant_tag_define)  \
+  CAT_3(VT_DEFINE_LVL2_OPT, ARG_IS_SINGULAR(variant_tag_define))               \
+  (idx, variant_name, template_types, ARG_IDENTITY variant_tag_define)
 
 // VT_DEFINE_LVL1
 // Variant Tage Define Level 1
@@ -133,8 +170,8 @@
   }                                                                            \
                                                                                \
   VG_TEMPLATE_DECLARE(template_types)                                          \
-  using t = std::shared_ptr<variant_name::internal::t \
-    VG_TEMPLATE_BRKTLST(template_types)>;  \
+  using t = std::shared_ptr<variant_name::internal::t VG_TEMPLATE_BRKTLST(     \
+      template_types)>;                                                        \
   FOR_EACH1(VT_DEFINE_, (variant_name, template_types), __VA_ARGS__)           \
   }
 
