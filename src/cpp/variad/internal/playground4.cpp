@@ -16,19 +16,28 @@ namespace internal {
 
 template <typename T> class int_or {
 public:
-  enum kind { KIND_UNDEFINED, KIND_INTEGER, KIND_T };
-  int_or() : kind_(kind::KIND_UNDEFINED) {}
+  enum kind { KIND_INTEGER, KIND_T };
+  int_or() = delete;
   int_or(const int &int_value)
-      : kind_(kind::KIND_INTEGER), int_value_(int_value), t_value_(nullptr) {}
+      : m_kind(kind::KIND_INTEGER), m_int_value(int_value), m_t_value(nullptr) {
+  }
   int_or(const int &&int_value)
-      : kind_(kind::KIND_INTEGER), int_value_(int_value), t_value_(nullptr) {}
-  int_or(std::shared_ptr<T> t_value)
-      : kind_(kind::KIND_T), int_value_(0), t_value_(t_value) {}
+      : m_kind(kind::KIND_INTEGER), m_int_value(int_value), m_t_value(nullptr) {
+  }
+  int_or(const std::shared_ptr<T> &t_value)
+      : m_kind(kind::KIND_T), m_int_value(0), m_t_value(t_value) {}
+  int_or(const std::shared_ptr<T> &&t_value)
+      : m_kind(kind::KIND_T), m_int_value(0), m_t_value(t_value) {}
+
+  bool is_int() const { return m_kind == kind::KIND_INTEGER; }
+  bool is_t() const { return m_kind == kind::KIND_T; }
+  int int_value() const { return m_int_value; }
+  const T &t_value() const { return *m_t_value; }
 
 private:
-  kind kind_;
-  int int_value_ = 0;
-  std::shared_ptr<T> t_value_ = nullptr;
+  kind m_kind = kind::KIND_UNDEFINED;
+  int m_int_value = -1;
+  std::shared_ptr<T> m_t_value = nullptr;
 };
 
 // Internal type for Tree<K, V>.
@@ -37,7 +46,7 @@ template <typename K, typename V> class t {
 public:
   t(int tag) : m_tag(tag) {}
 
-  int tag() { return m_tag; }
+  int tag() const { return m_tag; }
 
 private:
   int m_tag;
@@ -46,6 +55,14 @@ private:
 
 template <typename K, typename V>
 using t = Tree::internal::int_or<Tree::internal::t<K, V>>;
+
+namespace internal {
+
+template <typename K, typename V> int get_tag(const Tree::t<K, V> &arg) {
+  return arg.is_t() ? arg.t_value().tag() : arg.int_value();
+}
+
+} // namespace internal
 
 namespace Leaf {
 
@@ -193,6 +210,5 @@ int main(int argc, char **argv) {
   Tree::t<std::string, int> tree3 = Tree::Node2::of(
       "a", 2.0, Tree::Node2::of("b", 3, Tree::Leaf::of(), Tree::Leaf::of()),
       tree2);
-
   return 0;
 }
