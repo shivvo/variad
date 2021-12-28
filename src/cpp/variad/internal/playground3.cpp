@@ -206,6 +206,17 @@
   FOR_EACH1(VT_DEFINE_, (variant_name, template_types), __VA_ARGS__)           \
   }
 
+namespace variad {
+
+template <typename T> class auto_use_ptr_type { using type = T; };
+template <class T> class unqualified_type {
+  using type = typename auto_use_ptr_type<typename std::remove_const<
+      typename std::remove_reference<T>::type>::type>::type;
+};
+} // namespace variad
+
+
+
 VARIANT(Boolean, (_), (True)(False))
 
 VARIANT(Tree, (_, K, V),

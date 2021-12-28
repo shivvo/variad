@@ -11,6 +11,23 @@
 
 #include "for_each.hpp"
 
+namespace variad {
+
+template <typename T> class auto_use_ptr_type { using type = T; };
+template <class T> class unqualified_type {
+  using type = typename auto_use_ptr_type<typename std::remove_const<
+      typename std::remove_reference<T>::type>::type>::type;
+};
+} // namespace variad
+
+class Foo;
+
+namespace variad {
+template <> class auto_use_ptr_type<Foo> { using type = std::shared_ptr<Foo>; };
+} // namespace variad
+
+class Foo {};
+
 namespace Tree {
 namespace internal {
 template <typename K, typename V> class t;
@@ -23,8 +40,7 @@ namespace internal {
 template <typename K, typename V> class Node {
 public:
   Node(K arg1, V arg2, Tree::t<K, V> arg3, Tree::t<K, V> arg4)
-      : m_key(arg1),
-        m_value(arg2), m_left_child(arg3), m_right_child(arg4) {}
+      : m_key(arg1), m_value(arg2), m_left_child(arg3), m_right_child(arg4) {}
 
 private:
   K m_key;
@@ -168,6 +184,4 @@ Tree::Node2::intermediate::t<T1, T2, T3, T4> of(T1 arg1, T2 arg2, T3 arg3,
 
 } // namespace Tree
 
-int main(int argc, char **argv) {
-  return 0;
-}
+int main(int argc, char **argv) { return 0; }
