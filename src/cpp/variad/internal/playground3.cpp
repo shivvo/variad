@@ -11,74 +11,68 @@
 
 #include "for_each.hpp"
 
-// VG_TEMPLATE_BRKLST_FE
-// Variant Generics Template Bracket List For Each
+// VG_BRKLST_FE
+// Variant Generics Bracket List For Each
 // 1 and 0 macros for the typename declarations FOR_EACH. 1 has trailing comma,
 // 0 does not.
 // * ignore1
 // * ignore2
 // * type - the template type
-#define VG_TEMPLATE_BRKTLST_FE0(ignore1, ignore2, type) type
-#define VG_TEMPLATE_BRKTLST_FE1(ignore1, ignore2, type) type,
+#define VG_BRKTLST_FE0(ignore1, ignore2, type) type
+#define VG_BRKTLST_FE1(ignore1, ignore2, type) type,
 
-// VG_TEMPLATE_BRKTLST_OPT0
-// Variant Generics Template Bracket List Option 0
+// VG_BRKTLST_OPT0
+// Variant Generics Bracket List Option 0
 // Substitutes template bracket list for template type lists of format `(_,
 // etc)`.
-#define VG_TEMPLATE_BRKTLST_OPT0(ignore, ...)                                  \
-<FOR_EACH2(VG_TEMPLATE_BRKTLST_FE, _, __VA_ARGS__)>
+#define VG_BRKTLST_OPT0(ignore, ...)                                  \
+<FOR_EACH2(VG_BRKTLST_FE, _, __VA_ARGS__)>
 
-// VG_TEMPLATE_BRKTLST_OPT1
-// Variant Generics Template Bracket List Option 1
+// VG_BRKTLST_OPT1
+// Variant Generics Bracket List Option 1
 // Substitutes for the case where there are no template types which happens in
 // the case of `(_)`.
 // * ignore
-#define VG_TEMPLATE_BRKTLST_OPT1(ignore)
+#define VG_BRKTLST_OPT1(ignore)
 
-// VG_TEMPLATE_BRKTLST
-// Variant Generics Template Bracket List
+// VG_BRKTLST
+// Variant Generics Bracket List
 // Substitutes in <A, B, etc> based on a template list.
 // * template_types - template types formatted as `(_, A, B, etc)`
-#define VG_TEMPLATE_BRKTLST(template_types)                                    \
-  CAT_3(VG_TEMPLATE_BRKTLST_OPT, ARG_IS_SINGULAR(template_types)) template_types
+#define VG_BRKTLST(template_types)                                    \
+  CAT_3(VG_BRKTLST_OPT, ARG_IS_SINGULAR(template_types)) template_types
 
-// VG_TYPENAME_DECLARE
-// Variant Generics Typename Declare
-// Substitutes typename declaration for a single type.
-// * type - the typename
-#define VG_TYPENAME_DECLARE(type) typename type
-
-// VG_TEMPLATE_DECLARE_FE
-// Variant Generics Template Declare For Each
+// VG_DECLARE_FE
+// Variant Generics Declare For Each
 // 1 and 0 macros for the typename declarations FOR_EACH. 1 has trailing comma,
 // 0 does not.
 // * ignore1
 // * ignore2
 // * type - the template type to declare
-#define VG_TEMPLATE_DECLARE_FE0(ignore1, ignore2, type)                        \
-  VG_TYPENAME_DECLARE(type)
-#define VG_TEMPLATE_DECLARE_FE1(ignore1, ignore2, type)                        \
-  VG_TYPENAME_DECLARE(type),
+#define VG_DECLARE_FE0(ignore1, ignore2, type)                        \
+  typename type
+#define VG_DECLARE_FE1(ignore1, ignore2, type)                        \
+  typename type,
 
-// VG_TEMPLATE_DECLARE_OPT0
-// Variant Generics Template Declare Option 0
+// VG_DECLARE_OPT0
+// Variant Generics Declare Option 0
 // Substitutes template declare for template type lists of format `(_, etc)`.
-#define VG_TEMPLATE_DECLARE_OPT0(ignore, ...)                                  \
-  template <FOR_EACH2(VG_TEMPLATE_DECLARE_FE, _, __VA_ARGS__)>
+#define VG_DECLARE_OPT0(ignore, ...)                                  \
+  template <FOR_EACH2(VG_DECLARE_FE, _, __VA_ARGS__)>
 
-// VG_TEMPLATE_DECLARE_OPT1
-// Variant Generics Template Declare Option 1
+// VG_DECLARE_OPT1
+// Variant Generics Declare Option 1
 // Substitutes for the case where there are no template types which happens in
 // the case of `(_)`.
 // * ignore
-#define VG_TEMPLATE_DECLARE_OPT1(ignore)
+#define VG_DECLARE_OPT1(ignore)
 
-// VG_TEMPLATE_DECLARE
-// Variant Generics Template Declare
+// VG_DECLARE
+// Variant Generics Declare
 // Substitutes in `template <typename A, etc>` based on a template list.
 // * template_types - template types formatted as `(_, A, etc)`
-#define VG_TEMPLATE_DECLARE(template_types)                                    \
-  CAT_3(VG_TEMPLATE_DECLARE_OPT, ARG_IS_SINGULAR(template_types)) template_types
+#define VG_DECLARE(template_types)                                    \
+  CAT_3(VG_DECLARE_OPT, ARG_IS_SINGULAR(template_types)) template_types
 
 // VT_DEFINE_TAGDATA
 // Variant Tag Define Tag with Data
@@ -184,7 +178,7 @@
     std::shared_ptr<T> m_t_value = nullptr;                                    \
   };                                                                           \
                                                                                \
-  VG_TEMPLATE_DECLARE(template_types)                                          \
+  VG_DECLARE(template_types)                                          \
   class t {                                                                    \
   public:                                                                      \
     t(int tag) : m_tag(tag) {}                                                 \
@@ -196,14 +190,14 @@
   };                                                                           \
   }                                                                            \
                                                                                \
-  VG_TEMPLATE_DECLARE(template_types)                                          \
+  VG_DECLARE(template_types)                                          \
   using t = variant_name::internal::int_or<                                    \
-      variant_name::internal::t VG_TEMPLATE_BRKTLST(template_types)>;          \
+      variant_name::internal::t VG_BRKTLST(template_types)>;          \
                                                                                \
   namespace internal {                                                         \
                                                                                \
-  VG_TEMPLATE_DECLARE(template_types)                                          \
-  int get_tag(const variant_name::t VG_TEMPLATE_BRKTLST(template_types) &      \
+  VG_DECLARE(template_types)                                          \
+  int get_tag(const variant_name::t VG_BRKTLST(template_types) &      \
               arg) {                                                           \
     return arg.is_t() ? arg.t_value().tag() : arg.int_value();                 \
   }                                                                            \

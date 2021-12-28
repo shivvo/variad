@@ -13,6 +13,25 @@
 
 namespace Tree {
 namespace internal {
+template <typename K, typename V> class t;
+}
+template <typename K, typename V>
+using t = std::shared_ptr<Tree::internal::t<K, V>>;
+
+namespace internal {
+
+template <typename K, typename V> class Node {
+public:
+  Node(K arg1, V arg2, Tree::t<K, V> arg3, Tree::t<K, V> arg4)
+      : m_key(arg1),
+        m_value(arg2), m_left_child(arg3), m_right_child(arg4) {}
+
+private:
+  K m_key;
+  V m_value;
+  Tree::t<K, V> m_left_child;
+  Tree::t<K, V> m_right_child;
+};
 
 // Internal type for Tree<K, V>.
 // Has tag information.
@@ -26,10 +45,6 @@ private:
   int m_tag;
 };
 } // namespace internal
-
-template <typename K, typename V>
-using t = std::shared_ptr<Tree::internal::t<K, V>>;
-
 namespace Leaf {
 
 namespace intermediate {
@@ -154,38 +169,5 @@ Tree::Node2::intermediate::t<T1, T2, T3, T4> of(T1 arg1, T2 arg2, T3 arg3,
 } // namespace Tree
 
 int main(int argc, char **argv) {
-  std::cout << "hello, world!" << std::endl;
-  std::cout << "is double convertible to int "
-            << std::is_convertible<double, int>::value << std::endl;
-  std::cout << "is const char * convertible to int "
-            << std::is_convertible<const char *, int>::value << std::endl;
-  std::cout
-      << "is Tree::Leaf::intermediate::t convertible to "
-         "Tree::Leaf::internal::t<std::string, int> "
-      << std::is_convertible<Tree::Leaf::intermediate::t,
-                             Tree::Leaf::internal::t<std::string, int>>::value
-      << std::endl;
-  std::cout << "is Tree::Leaf::intermediate::t convertible to "
-               "Tree::t<std::string, int> "
-            << std::is_convertible<Tree::Leaf::intermediate::t,
-                                   Tree::t<std::string, int>>::value
-            << std::endl;
-  std::cout << "is Tree::Node2::intermediate::t<const char *, const char *, "
-               "Tree::Leaf::intermediate::t, Tree::Leaf::intermediate::t> "
-               "convertible to Tree::Node2::internal::t<std::string, int> "
-            << std ::is_convertible<
-                   Tree::Node2::intermediate::t<const char *, const char *,
-                                                Tree::Leaf::intermediate::t,
-                                                Tree::Leaf::intermediate::t>,
-                   Tree::Node2::internal::t<std::string, int>>::value
-            << std::endl;
-
-  Tree::t<std::string, int> tree = Tree::Leaf::of();
-  Tree::t<std::string, int> tree2 =
-      Tree::Node2::of("a", 2.0, Tree::Leaf::of(), Tree::Leaf::of());
-  Tree::t<std::string, int> tree3 = Tree::Node2::of(
-      "a", 2.0, Tree::Node2::of("b", 3, Tree::Leaf::of(), Tree::Leaf::of()),
-      tree2);
-
   return 0;
 }
