@@ -26,17 +26,19 @@ public:
   };
 
 private:
-  template <typename T> struct auto_ptr_type { 
-    using type = typename std::conditional<std::is_same<T, BinaryTree<K, V>>::value, T, std::shared_ptr<T>>::type;
-  };
   template <typename T> struct raw_type {
     using type =
-        typename std::remove_const<typename std::remove_reference<T>>::type;
+        typename std::remove_cv<typename std::remove_reference<T>>::type;
   };
+  template <typename T> struct auto_ptr_type {
+    using type = typename std::conditional<
+        std::is_same<typename raw_type<T>::type, BinaryTree<K, V>>::value, T,
+        std::shared_ptr<T>>::type;
+  };
+
   template <typename T> struct tagdata_type {
     using type = typename auto_ptr_type<typename raw_type<T>::type>::type;
   };
 };
-
 
 int main(int argc, char **argv) { return 0; }
