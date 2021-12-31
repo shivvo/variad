@@ -64,7 +64,7 @@ private:
 
 public:
   class transient_Leaf;
-  template <typename T1, typename T2, typename T3, typename T4>
+  template <typename T0, typename T1, typename T2, typename T3>
   class transient_Node;
 
 private:
@@ -87,7 +87,7 @@ private:
     typename tagdata_type<BinaryTree<K, V>>::type m_arg2;
     typename tagdata_type<BinaryTree<K, V>>::type m_arg3;
 
-    template <typename T1, typename T2, typename T3, typename T4>
+    template <typename T0, typename T1, typename T2, typename T3>
     friend class transient_Node;
   };
 
@@ -114,9 +114,27 @@ public:
     }
   }
 
-  class transient_Leaf {};
-  template <typename T1, typename T2, typename T3, typename T4>
-  class transient_Node {};
+  class transient_Leaf {
+  public:
+    operator BinaryTree<K, V>() { return BinaryTree<K, V>(0); }
+
+  private:
+    transient_Leaf() {}
+
+    friend class BinaryTree<K, V>;
+  };
+  template <typename T0, typename T1, typename T2, typename T3>
+  class transient_Node {
+
+  private:
+    transient_Node(T0 arg0, T1 arg1, T2 arg2, T3 arg3)
+        : m_arg0(arg0), m_arg1(arg1), m_arg2(arg2), m_arg3(arg3) {}
+
+    T0 m_arg0;
+    T1 m_arg1;
+    T2 m_arg2;
+    T3 m_arg3;
+  };
 
 private:
   int m_tag;
