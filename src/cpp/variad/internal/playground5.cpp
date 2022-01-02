@@ -12,14 +12,14 @@
 #include "for_each.hpp"
 
 namespace variad {
-template <typename A> struct ref {
+template <typename A> class ref {
 public:
   template <typename B, typename std::enable_if<
                             std::is_convertible<B, A>::value>::type * = nullptr>
   ref(const B &raw_data) : m_data(std::make_shared<A>(raw_data)) {}
   template <typename B, typename std::enable_if<
                             std::is_convertible<B, A>::value>::type * = nullptr>
-  ref(B &&raw_data) : m_data(std::make_shared<A>(raw_data)) {}
+  ref(B &&raw_data) : m_data(std::make_shared<A>(std::move(raw_data))) {}
 
   operator const A &() { return *m_data; }
   operator const std::shared_ptr<A> &() { return m_data; }
@@ -30,6 +30,111 @@ private:
 
 template <typename T> struct remove_cvref {
   using type = typename std::remove_cv<typename std::remove_reference<T>>::type;
+};
+
+namespace _internal {
+template <bool...> struct bool_pack {};
+
+template <bool... B>
+using conjunction = std::is_same<bool_pack<true, B...>, bool_pack<B..., true>>;
+
+template <std::size_t... S> struct seq {};
+
+template <std::size_t N, std::size_t... S>
+struct gens : gens<N - 1, N - 1, S...> {};
+
+template <std::size_t... S> struct gens<0, S...> { typedef seq<S...> type; };
+
+template <template <typename X, typename Y> class Func>
+struct tuple_zip_compare {
+
+  template <template <typename...> class Tup1,
+            template <typename...> class Tup2, typename... A, typename... B,
+            std::size_t... S>
+  std::array<bool, sizeof...(A)> invoke_with_seq(Tup1<A...> t1, Tup2<B...> t2,
+                                                 seq<S...> s) {
+    return {Func<typename std::tuple_element<S, A...>::type,
+                 typename std::tuple_element<S, B...>>::type >
+            (std::get<S>(t1), std::get<S>(t2))...};
+  }
+  template <template <typename...> class Tup1,
+            template <typename...> class Tup2, typename... A, typename... B>
+  std::array<bool, sizeof...(A)> invoke(Tup1<A...> t1, Tup2<B...> t2) {
+    static_assert(sizeof...(A) == sizeof...(B),
+                  "The tuple sizes must be the same");
+    return invoke_with_seq(t1, t2, typename gens<sizeof...(A)>::type());
+  }
+};
+
+} // namespace _internal
+
+template <int i, template <typename T> class AutoType, typename... T>
+class tagged_tuple {
+public:
+  using type = std::tuple<T...>;
+
+  template <typename... U,
+            typename = typename std::enable_if<std::is_convertible<
+                std::tuple<U...>,
+                std::tuple<typename AutoType<T>::type...>>::value>::type>
+  tagged_tuple(std::tuple<U...> tuple) : m_tuple(tuple) {}
+
+  int m_tag = i;
+  std::tuple<typename AutoType<T>::type...> m_tuple;
+};
+
+template <int i, typename Variant, typename... Rest> class transient_tag;
+
+template <int i, typename Variant> class transient_tag<i, Variant> {
+public:
+  transient_tag() {}
+
+  template <typename = typename std::enable_if<
+                std::is_convertible<int, Variant>::value>::type>
+  operator Variant() {
+    return Variant(i);
+  }
+};
+
+template <int i, typename Variant, typename Tag, typename... Args>
+class transient_tag<i, Variant, Tag, Args...> {
+public:
+  transient_tag(const Args &... args) : m_tuple(args...) {}
+
+  template <typename = typename std::enable_if<
+                std::is_convertible<std::tuple<Args...>, Tag>::value>::type>
+  operator Variant() {
+    return Variant(i, Tag(m_tuple));
+  }
+
+  std::tuple<Args...> m_tuple;
+};
+
+template <int i, template <typename...> class Variant>
+class transient_template_simple_tag {
+public:
+  template <typename... VariantTypes,
+            typename = typename std::enable_if<std::is_convertible<
+                int, Variant<VariantTypes...>>::value>::type>
+  operator Variant<VariantTypes...>() const {
+    return Variant<VariantTypes...>(i);
+  }
+};
+
+template <int i, template <typename...> class Variant,
+          template <typename...> class Tag, typename... Args>
+class transient_template_complex_tag {
+public:
+  transient_template_complex_tag(const Args &... args) : m_tuple(args...) {}
+
+  template <typename... VariantTypes,
+            typename = typename std::enable_if<std::is_convertible<
+                int, Variant<VariantTypes...>>::value>::type>
+  operator Variant<VariantTypes...>() const {
+    return Variant<VariantTypes...>(i, Tag<VariantTypes...>(m_tuple));
+  }
+
+  std::tuple<Args...> m_tuple;
 };
 
 } // namespace variad
@@ -44,6 +149,30 @@ struct B {
   B() {}
   operator A() { return A(); }
 };
+
+struct C {
+  C(int i) {}
+};
+
+namespace Tree {
+
+template <typename K, typename V> class t;
+
+namespace _internal_Tree {
+template <typename K, typename V> class impl_Node2;
+
+class transient_Leaf;
+template <typename T1, typename T2, typename T3, typename T4>
+class transient_Node2;
+} // namespace _internal_Tree
+
+_internal_Tree::transient_Leaf Leaf();
+template <typename T1, typename T2, typename T3, typename T4>
+_internal_Tree::transient_Node2<T1, T2, T3, T4> Node2();
+
+namespace _internal_Tree {}
+
+} // namespace Tree
 
 template <typename K, typename V> class BinaryTree {
 private:
@@ -146,5 +275,6 @@ private:
 int main(int argc, char **argv) {
   auto a1 = std::make_shared<A>(B());
   auto a2 = std::make_shared<A>(A());
+  auto c1 = variad::transient_tag<0, C>();
   return 0;
 }
