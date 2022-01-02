@@ -54,8 +54,8 @@ struct tuple_zip_compare {
   std::array<bool, sizeof...(A)> invoke_with_seq(Tup1<A...> t1, Tup2<B...> t2,
                                                  seq<S...> s) {
     return {Func<typename std::tuple_element<S, A...>::type,
-                 typename std::tuple_element<S, B...>>::type >
-            (std::get<S>(t1), std::get<S>(t2))...};
+                 typename std::tuple_element<S, B...>::type>()(
+        std::get<S>(t1), std::get<S>(t2))...};
   }
   template <template <typename...> class Tup1,
             template <typename...> class Tup2, typename... A, typename... B>
@@ -159,7 +159,7 @@ namespace Tree {
 template <typename K, typename V> class t;
 
 namespace _internal_Tree {
-template <typename K, typename V> class impl_Node2;
+template <typename K, typename V> class repr_Node2;
 
 class transient_Leaf;
 template <typename T1, typename T2, typename T3, typename T4>
@@ -170,7 +170,97 @@ _internal_Tree::transient_Leaf Leaf();
 template <typename T1, typename T2, typename T3, typename T4>
 _internal_Tree::transient_Node2<T1, T2, T3, T4> Node2();
 
-namespace _internal_Tree {}
+namespace _internal_Tree {
+
+template <typename K, typename V, typename T> struct auto_ptrize {
+  using type = typename std::conditional<
+      std::is_same<typename ::variad::remove_cvref<T>::type, t<K, V>>::value,
+      ::variad::ref<t<K, V>>, typename ::variad::remove_cvref<T>::type>;
+};
+
+template <typename K, typename V, typename T> struct tagdata_type {
+  using type =
+      typename auto_ptrize<K, V,
+                           typename ::variad::remove_cvref<T>::type>::type;
+};
+
+template <typename K, typename V> class repr_Node2 {
+public:
+  repr_Node2(const repr_Node2 &) = default;
+  repr_Node2(repr_Node2 &&) = default;
+  ~repr_Node2() = default;
+
+private:
+  repr_Node2(const K &arg0, const V &arg1, const t<K, V> &arg2,
+             const t<K, V> &arg3)
+      : m_arg0(arg0), m_arg1(arg1), m_arg2(arg2), m_arg3(arg3) {}
+
+  const typename tagdata_type<K, V, K>::type &arg0() { return arg0; };
+  const typename tagdata_type<K, V, V>::type &arg1() { return arg1; }
+  const typename tagdata_type<K, V, t<K, V>>::type &arg2() { return arg2; };
+  const typename tagdata_type<K, V, t<K, V>>::type &arg3() { return arg3; };
+
+  typename tagdata_type<K, V, K>::type m_arg0;
+  typename tagdata_type<K, V, V>::type m_arg1;
+  typename tagdata_type<K, V, t<K, V>>::type m_arg2;
+  typename tagdata_type<K, V, t<K, V>>::type m_arg3;
+
+  template <typename T0, typename T1, typename T2, typename T3>
+  friend class transient_Node;
+};
+} // namespace _internal_Tree
+
+template <typename K, typename V> class t {
+public:
+  t(const t &other) {
+    m_tag = other.m_tag;
+    if (other.m_tag == 1) {
+      m_dtag1 = other.m_dtag1;
+    }
+  }
+  t(t &&other) {
+    m_tag = other.m_tag;
+    if (other.m_tag == 1) {
+      m_dtag1 = other.m_dtag1;
+    }
+  }
+  ~t() {
+    if (m_tag == 1) {
+      m_dtag1.~repr_Node2();
+    }
+  }
+
+private:
+  int m_tag;
+  union {
+    _internal_Tree::repr_Node2<K, V> m_dtag1;
+  };
+};
+
+namespace _internal_Tree {
+
+class transient_Leaf {
+public:
+  template <typename K, typename V> operator t<K, V>() { return t<K, V>(0); }
+
+private:
+  transient_Leaf() {}
+};
+
+template <typename T0, typename T1, typename T2, typename T3>
+class transient_Node {
+
+private:
+  transient_Node(T0 arg0, T1 arg1, T2 arg2, T3 arg3)
+      : m_arg0(arg0), m_arg1(arg1), m_arg2(arg2), m_arg3(arg3) {}
+
+  T0 m_arg0;
+  T1 m_arg1;
+  T2 m_arg2;
+  T3 m_arg3;
+};
+
+} // namespace _internal_Tree
 
 } // namespace Tree
 
