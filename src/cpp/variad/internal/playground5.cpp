@@ -14,11 +14,11 @@
 namespace variad {
 template <typename A> class ref {
 public:
-  template <typename B, typename std::enable_if<
-                            std::is_convertible<B, A>::value>::type * = nullptr>
+  template <typename B, typename = typename std::enable_if<
+                            std::is_convertible<B, A>::value>::type>
   ref(const B &raw_data) : m_data(std::make_shared<A>(raw_data)) {}
-  template <typename B, typename std::enable_if<
-                            std::is_convertible<B, A>::value>::type * = nullptr>
+  template <typename B, typename = typename std::enable_if<
+                            std::is_convertible<B, A>::value>::type>
   ref(B &&raw_data) : m_data(std::make_shared<A>(std::move(raw_data))) {}
 
   operator const A &() { return *m_data; }
@@ -29,7 +29,8 @@ private:
 };
 
 template <typename T> struct remove_cvref {
-  using type = typename std::remove_cv<typename std::remove_reference<T>>::type;
+  using type =
+      typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 };
 
 namespace _internal {
@@ -166,16 +167,15 @@ template <typename T1, typename T2, typename T3, typename T4>
 class transient_Node2;
 } // namespace _internal_Tree
 
-_internal_Tree::transient_Leaf Leaf();
 template <typename T1, typename T2, typename T3, typename T4>
-_internal_Tree::transient_Node2<T1, T2, T3, T4> Node2();
+_internal_Tree::transient_Node2<T1, T2, T3, T4> Node2(T1, T2, T3, T4);
 
 namespace _internal_Tree {
 
 template <typename K, typename V, typename T> struct auto_ptrize {
   using type = typename std::conditional<
       std::is_same<typename ::variad::remove_cvref<T>::type, t<K, V>>::value,
-      ::variad::ref<t<K, V>>, typename ::variad::remove_cvref<T>::type>;
+      ::variad::ref<t<K, V>>, typename ::variad::remove_cvref<T>::type>::type;
 };
 
 template <typename K, typename V, typename T> struct tagdata_type {
@@ -185,14 +185,11 @@ template <typename K, typename V, typename T> struct tagdata_type {
 };
 
 template <typename K, typename V> class repr_Node2 {
-public:
-  repr_Node2(const repr_Node2 &) = default;
-  repr_Node2(repr_Node2 &&) = default;
-  ~repr_Node2() = default;
-
 private:
-  repr_Node2(const K &arg0, const V &arg1, const t<K, V> &arg2,
-             const t<K, V> &arg3)
+  repr_Node2(const typename tagdata_type<K, V, K>::type &arg0,
+             const typename tagdata_type<K, V, V>::type &arg1,
+             const typename tagdata_type<K, V, t<K, V>>::type &arg2,
+             const typename tagdata_type<K, V, t<K, V>>::type &arg3)
       : m_arg0(arg0), m_arg1(arg1), m_arg2(arg2), m_arg3(arg3) {}
 
   const typename tagdata_type<K, V, K>::type &arg0() { return arg0; };
@@ -206,7 +203,7 @@ private:
   typename tagdata_type<K, V, t<K, V>>::type m_arg3;
 
   template <typename T0, typename T1, typename T2, typename T3>
-  friend class transient_Node;
+  friend class transient_Node2;
 };
 } // namespace _internal_Tree
 
@@ -221,7 +218,7 @@ public:
   t(t &&other) {
     m_tag = other.m_tag;
     if (other.m_tag == 1) {
-      m_dtag1 = other.m_dtag1;
+      m_dtag1 = std::move(other.m_dtag1);
     }
   }
   ~t() {
@@ -231,140 +228,76 @@ public:
   }
 
 private:
+  t(int i) : m_tag(i) {}
+  t(int i, const _internal_Tree::repr_Node2<K, V> &dtag1)
+      : m_tag(i), m_dtag1(dtag1) {}
+
   int m_tag;
   union {
     _internal_Tree::repr_Node2<K, V> m_dtag1;
   };
+
+  friend class _internal_Tree::transient_Leaf;
+  template <typename T0, typename T1, typename T2, typename T3>
+  friend class _internal_Tree::transient_Node2;
 };
 
 namespace _internal_Tree {
 
 class transient_Leaf {
 public:
-  template <typename K, typename V> operator t<K, V>() { return t<K, V>(0); }
-
-private:
-  transient_Leaf() {}
+  template <typename K, typename V> operator t<K, V>() const { return t<K, V>(0); }
 };
 
 template <typename T0, typename T1, typename T2, typename T3>
-class transient_Node {
+class transient_Node2 {
+public:
+  template <typename K, typename V> operator t<K, V>() const {
+    return t<K, V>(1, repr_Node2<K, V>(m_arg0, m_arg1, m_arg2, m_arg3));
+  }
 
 private:
-  transient_Node(T0 arg0, T1 arg1, T2 arg2, T3 arg3)
+  transient_Node2(T0 arg0, T1 arg1, T2 arg2, T3 arg3)
       : m_arg0(arg0), m_arg1(arg1), m_arg2(arg2), m_arg3(arg3) {}
 
   T0 m_arg0;
   T1 m_arg1;
   T2 m_arg2;
   T3 m_arg3;
+
+  friend transient_Node2<T0, T1, T2, T3> Node2<T0, T1, T2, T3>(T0, T1, T2,
+                                                                     T3);
 };
 
 } // namespace _internal_Tree
 
+const _internal_Tree::transient_Leaf Leaf = _internal_Tree::transient_Leaf();
+
+template <typename T1, typename T2, typename T3, typename T4>
+_internal_Tree::transient_Node2<T1, T2, T3, T4> Node2(T1 arg0, T2 arg1, T3 arg2,
+                                                      T4 arg3) {
+  return std::move(
+      _internal_Tree::transient_Node2<T1, T2, T3, T4>(arg0, arg1, arg2, arg3));
+}
+
 } // namespace Tree
-
-template <typename K, typename V> class BinaryTree {
-private:
-  template <typename T> struct auto_ptrize {
-    using type = typename std::conditional<
-        std::is_same<typename ::variad::remove_cvref<T>::type,
-                     BinaryTree<K, V>>::value,
-        ::variad::ref<BinaryTree<K, V>>,
-        typename ::variad::remove_cvref<T>::type>;
-  };
-
-  template <typename T> struct tagdata_type {
-    using type =
-        typename auto_ptrize<typename ::variad::remove_cvref<T>::type>::type;
-  };
-
-  class internal_Node;
-
-public:
-  class transient_Leaf;
-  template <typename T0, typename T1, typename T2, typename T3>
-  class transient_Node;
-
-private:
-  class internal_Node {
-    internal_Node(const K &arg0, const V &arg1, const BinaryTree<K, V> &arg2,
-                  const BinaryTree<K, V> &arg3)
-        : m_arg0(arg0), m_arg1(arg1), m_arg2(arg2), m_arg3(arg3) {}
-
-    const typename tagdata_type<K>::type &arg0() { return arg0; };
-    const typename tagdata_type<V>::type &arg1() { return arg1; }
-    const typename tagdata_type<BinaryTree<K, V>>::type &arg2() {
-      return arg2;
-    };
-    const typename tagdata_type<BinaryTree<K, V>>::type &arg3() {
-      return arg3;
-    };
-
-    typename tagdata_type<K>::type m_arg0;
-    typename tagdata_type<V>::type m_arg1;
-    typename tagdata_type<BinaryTree<K, V>>::type m_arg2;
-    typename tagdata_type<BinaryTree<K, V>>::type m_arg3;
-
-    template <typename T0, typename T1, typename T2, typename T3>
-    friend class transient_Node;
-  };
-
-  BinaryTree(const int &tag) : m_tag(tag) {}
-  BinaryTree(const internal_Node &dtag1) : m_tag(1), m_dtag1(dtag1) {}
-  BinaryTree() = delete;
-
-public:
-  BinaryTree(const BinaryTree &other) {
-    m_tag = other.m_tag;
-    if (other.m_tag == 1) {
-      m_dtag1 = other.m_dtag1;
-    }
-  }
-  BinaryTree(BinaryTree &&other) {
-    m_tag = other.m_tag;
-    if (other.m_tag == 1) {
-      m_dtag1 = other.m_dtag1;
-    }
-  }
-  ~BinaryTree() {
-    if (m_tag == 1) {
-      m_dtag1.~internal_Node();
-    }
-  }
-
-  class transient_Leaf {
-  public:
-    operator BinaryTree<K, V>() { return BinaryTree<K, V>(0); }
-
-  private:
-    transient_Leaf() {}
-
-    friend class BinaryTree<K, V>;
-  };
-  template <typename T0, typename T1, typename T2, typename T3>
-  class transient_Node {
-
-  private:
-    transient_Node(T0 arg0, T1 arg1, T2 arg2, T3 arg3)
-        : m_arg0(arg0), m_arg1(arg1), m_arg2(arg2), m_arg3(arg3) {}
-
-    T0 m_arg0;
-    T1 m_arg1;
-    T2 m_arg2;
-    T3 m_arg3;
-  };
-
-private:
-  int m_tag;
-  union {
-    internal_Node m_dtag1;
-  };
-};
 
 int main(int argc, char **argv) {
   auto a1 = std::make_shared<A>(B());
   auto a2 = std::make_shared<A>(A());
   auto c1 = variad::transient_tag<0, C>();
+  std::cout
+      << "is transient Leaf convertible to variad::ref<Tree::t> "
+      << std::is_convertible<Tree::_internal_Tree::transient_Leaf,
+                             ::variad::ref<Tree::t<std::string, int>>>::value
+      << std::endl;
+
+  Tree::t<std::string, std::size_t> tree1 = Tree::Leaf;
+  Tree::t<std::string, std::size_t> tree2 =
+      Tree::Node2("a", 2, Tree::Leaf, Tree::Leaf);
+
+  Tree::t<std::string, std::size_t> tree3 =
+      Tree::Node2("b", 3, Tree::Node2("c", 4, Tree::Leaf, tree1), tree2);
+
   return 0;
 }
